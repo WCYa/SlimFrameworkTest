@@ -1,0 +1,57 @@
+{% extends 'layouts/app.twig' %}
+
+{% block content %}
+
+    <h2 class="font-weight-bold">新增使用者</h2>
+    <hr /><br />
+
+    <form class="col-md-6" method="post" action="{{ path_for('register') }}">
+        <div class="form-group">
+            <label>帳號</label>
+            <input name="account" class="form-control {% if error.account %}{{ 'is-invalid' }}{% endif %}" value="{{ old.account }}" required >
+            <span class="help-block {% if error.account %}{{ 'text-danger' }}{% endif %}">{{ error.account }}</span>
+        </div>
+        <div class="form-group">
+            <label>密碼</label>
+            <input type="password" name="password" class="form-control {% if error.password %}{{ 'is-invalid' }}{% endif %}" required>
+            <span class="help-block {% if error.password %}{{ 'text-danger' }}{% endif %}">{{ error.password }}</span>
+        </div>
+        <div class="form-group">
+            <label class="font-weight-bold">確認密碼</label>
+            <input type="password" name="password2" class="form-control {% if error.password2 %}{{ 'is-invalid' }}{% endif %}" required>
+            <span class="help-block {% if error.password2 %}{{ 'text-danger' }}{% endif %}">{{ error.password2 }}</span>
+        </div>
+        <br /><hr />
+        <div class="form-group">
+            <label>姓名</label>
+            <input name="name" class="form-control {% if error.name %}{{ 'is-invalid' }}{% endif %}" value="{{ old.account }}" required>
+            <span class="help-block {% if error.name %}{{ 'text-danger' }}{% endif %}">{{ error.name }}</span>
+        </div>
+        <div class="form-group">
+            <label>信箱</label>
+            <input type="email" name="email" class="form-control {% if error.email %}{{ 'is-invalid' }}{% endif %}" value="{{ old.account }}">
+            <span class="help-block {% if error.email %}{{ 'text-danger' }}{% endif %}">{{ error.email }}</span>
+        </div>
+        <div class="form-group">
+            <label>部門</label>
+            <select class="custom-select form-control" name="group_code" id="group_code">
+                <option value=""></option>
+                {% for group in groups %}
+                    <option value="{{ group.code }}">{{ group.code }}  {{ group.group_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>角色</label>
+            <input name="role" class="form-control {% if error.role %}{{ 'is-invalid' }}{% endif %}" value="{{ old.role }}">
+            <span class="help-block {% if error.role %}{{ 'text-danger' }}{% endif %}">{{ error.role }}</span>
+        </div>
+        <br />
+        <div class="form-group float-right">
+            <button type="submit" class="btn btn-outline-primary">新增</button>
+            <a href="{{ path_for('home') }}" class="btn btn-secondary">返回</a>
+        </div>
+        {{ csrf.field | raw }}
+    </form>
+
+{% endblock %}

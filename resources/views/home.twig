@@ -1,0 +1,89 @@
+{% extends 'layouts/app.twig' %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-md-4">
+        
+    </div><br />
+    <div class="col-md-8">
+        <h3 class="font-weight-bold">流程列表</h3><hr />
+
+        <div id="general_header">
+            <h4>一般公文&nbsp;&nbsp;&nbsp;
+                <a class="btn btn-outline-dark" href="{{ path_for('official-doc.launch') }}">發起新流程</a>
+                <button class="btn btn-outline-info">查看全部</button>
+            </h4>
+            
+            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                <label class="btn btn-outline-warning active">
+                    <input type="radio" onclick="crgGeneralTable('notyet')"  checked> 未簽核
+                </label>
+                <label class="btn btn-outline-success">
+                    <input type="radio" onclick="crgGeneralTable('finish')" > 已簽核
+                </label>
+            </div>
+        </div>
+        <table id="general_table" class="bg-white"></table>
+
+    </div><br />
+</div>
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+
+<script> 
+    var generalOpt = 'notyet';
+    function crgGeneralTable(opt) {
+        generalOpt = opt;
+        initGeneralTable();
+    }
+    function initGeneralTable() {
+        $('#general_table').bootstrapTable("destroy").bootstrapTable({
+            sidePagination: 'server',
+            url: '{{ path_for("official-doc.data.json") }}',
+            method: 'get',
+            toolbar: '#general_header',
+            pagination: true,
+            pageList: [5, 10, 20, 50],
+            pageNumber: 1,
+            pageSize: 5,
+            showRefresh: true,
+            sortName: '',
+            sortOrder: '',
+            search: false,
+            detailView: false,
+            theadClasses: 'thead-dark',
+            queryParams: function (params) {
+                var query_params = {
+                    limit: params.limit,
+                    offset: params.offset,
+                    sort: params.sort,
+                    order: params.order,
+                    option: generalOpt
+                };
+                return query_params;
+            },
+            columns: [
+                { field: 'btn', 
+                    width: 100, 
+                    align: 'center'
+                    },
+                { field: 'title', title: '標題'},
+                { field: 'group', title: '單位'},
+                { field: 'sender', title: '送件人'},
+                { field: 'create_at', title: '發文日期'}
+            ]
+        });
+    }
+
+    window.onload = function() {
+        initGeneralTable();
+    }
+</script>
+{% endblock %}

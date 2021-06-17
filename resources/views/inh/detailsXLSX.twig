@@ -1,0 +1,62 @@
+{% extends 'layouts/xlsx.twig' %}
+
+{% block content %}
+
+    
+<table id="mytable" style="visibility: hidden;">
+    <tr>
+        <th>序</th>
+        <th>最後列印日</th>
+        <th>繳庫編號</th>
+        <th>倉庫收</th>
+        <th>轉物管</th>
+        <th>組別</th>
+        <th>件號</th>
+        <th>件名</th>
+        <th>批號</th>
+        <th>需求數</th>
+        <th>製號1</th>
+        <th>數量1</th>
+        <th>製號2</th>
+        <th>數量2</th>
+        <th>製號3</th>
+        <th>數量3</th>
+    </tr>
+    {% for row in db_rows %}
+        <tr>
+            <td data-tableexport-xlsxformatid="49">{{ loop.index }}</td>
+            <td>{{ row.e_date | date('Y-m-d H:i:s') }}</td>
+            <td data-tableexport-xlsxformatid="49">{{ row.serial_no }}</td>
+            <td></td>
+            <td></td>
+            <td data-tableexport-xlsxformatid="49">{{ row.inh_dep }}</td>
+            <td data-tableexport-xlsxformatid="49">{{ row.part_no }}</td>
+            <td>{{ row.part_name }}</td>
+            <td>{{ row.lot_no }}</td>
+            <td>{{ row.isu_qty }}</td>
+            <td data-tableexport-xlsxformatid="49">{{ row.man_lot1 }}</td>
+            <td>{{ row.inh_qty1 }}</td>
+            <td data-tableexport-xlsxformatid="49">{{ row.man_lot2 }}</td>
+            <td>{{ row.inh_qty2 }}</td>
+            <td data-tableexport-xlsxformatid="49">{{ row.man_lot3 }}</td>
+            <td>{{ row.inh_qty3 }}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+<script>
+    window.onload = function() {
+        // xlsx 文字格式 data-tableexport-xlsxformatid="49"
+        // xls 文字格式 data-tableexport-msonumberformat="\@"
+        $("#mytable").tableExport({
+            type: 'xlsx',
+            fileName: "{{ filename }}",
+            mso: { worksheetName: ['繳庫單資料']},
+            escape:"false"
+        });
+        window.close();
+    };
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'layouts/app.twig' %}
+
+{% block content %}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a  href="{{ path_for('home') }}">首頁</a></li>
+        <li class="breadcrumb-item active" aria-current="page">流程申請</li>
+    </ol>
+</nav>
+
+<div class="col-md-6 mx-auto">
+<div class="card ">
+    <div class="card-header bg-dark text-white ">流程申請</div>
+    <div class="card-body">
+        <form method="post"  enctype="multipart/form-data" action="{{ path_for('official-doc.launch') }}" >
+            <div class="form-group">
+                <label style="font-weight: bold;" for="title" >標題</label>
+                <input type="text" class="form-control" name="title" id="title" value="{{ old.title }}" required/>
+            </div>
+            <div class="form-group">      
+                <label style="font-weight: bold;" for="comment">備註 (字數限制:250)</label>
+                <textarea class="form-control" name="comment" id="comment" maxlength="250">{{ old.comment }}</textarea>
+            </div> <br />
+            <div class="form-group">
+                <label style="font-weight: bold;">附件 : </label>
+                <input type="file" name="attachment" />
+            </div> <hr>
+            <div>
+                <label style="font-weight: bold; margin-right: 5px">流程人數</label>
+                <select id="slot_num" name="slot_num" onchange="changeFlowNum(this)">
+                    <option value='1'> 1 人 </option>
+                    <option value='2' selected> 2 人 </option>
+                    <option value='3' > 3 人 </option>
+                    <option value='4'> 4 人 </option>
+                    <option value='5'> 5 人 </option>
+                </select>
+            </div>
+            <div id="slot_div"></div>
+            <button type="submit" class="btn btn-outline-primary">送出</button>
+            <a class="btn btn-secondary" href="{{ path_for('home') }}">返回</a>
+            {{ csrf.field | raw }}
+        </form>
+    </div>
+</div>
+</div>
+<br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+
+<script>
+    function changeFlowNum(elem)
+    {
+        var number = elem.value; // 流程人數
+        var gObj = JSON.parse('{{ groups | raw }}');
+
+        var slot_div = document.getElementById('slot_div');
+        slot_div.innerHTML = null; // 清空
+
+        for (var i=1; i<=number; i++) {
+            let div_g = document.createElement('div');
+            div_g.classList.add('form-group');
+
+            let label = document.createElement('label');
+            label.setAttribute("style", "font-weight: bold;");
+            label.textContent = '會簽人' + i;
+
+            let div_row = document.createElement('div');
+            div_row.classList.add('form-row');
+
+            let sel_g = document.createElement('select');
+            sel_g.id = 'group' + i;
+            sel_g.name = 'group' + i;
+            sel_g.setAttribute("onchange", "changeGroup(this, 'slot" + i + "')");
+            sel_g.classList.add('form-control', 'col-md-4', 'mr-1');
+
+            let sel_u = document.createElement('select');
+            sel_u.id = 'slot' + i;
+            sel_u.name = 'slot' + i;
+            sel_u.classList.add('form-control', 'col-md-4', 'mr-1');
+            sel_u.setAttribute("required", "");
+
+            let opt1 = document.createElement('option');
+            sel_u.append(opt1);
+
+            let opt2 = document.createElement('option');
+            opt2.text = '請選擇部門';
+            sel_g.append(opt2);
+            for (var key in gObj) {
+                let opt = document.createElement('option');
+                opt.value = key;
+                opt.text = gObj[key];
+                sel_g.append(opt);
+            }
+
+            div_row.append(sel_g);
+            div_row.append(sel_u);
+            div_g.append(label);
+            div_g.append(div_row);
+            slot_div.append(div_g);
+        }
+    }
+
+    function changeGroup(elem, flow_id)
+    {
+        var obj = JSON.parse('{{ users | raw }}');
+        var sel = document.getElementById(flow_id);
+        var len = sel.childNodes.length;
+        for (var i = (len-1); i>=1; i--)
+            sel.removeChild(sel.options[i]);
+        for (var key in obj) {
+            if (obj[key][1] == elem.value) {
+                let opt = document.createElement("option");
+                opt.value = key;
+                opt.text = obj[key][0];
+                sel.append(opt);
+            }
+        }
+    }
+
+    window.onload = function()
+    {
+        var slot_num = document.getElementById('slot_num');
+        slot_num.onchange();
+    }
+    
+</script>
+{% endblock %}

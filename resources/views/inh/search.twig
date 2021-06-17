@@ -1,0 +1,312 @@
+{% extends 'layouts/app.twig' %}
+
+{% block content %}
+
+<h2 class="font-weight-bold">繳庫單查詢</h2>
+<hr />
+<div class="d-flex justify-content-center">
+    <div id="toolbar" class="card bg-light ">
+        <div class="card-header bg-secondary text-white">
+            <div class="row">
+                <div class="col-9" style="font-size: 24px;">
+                    查詢條件
+                </div>
+                <div class="col-3" style="text-align: right;" >
+                    <div class="btn btn-dark dropdown-toggle" style="padding: 3px 12px;" href="#menu" data-toggle="collapse"></div>
+                </div>
+            </div>
+        </div>
+        <div id="menu" class="card-body collapse show">
+            <div class="form-group row">
+                <select id="column1" class="form-control col-md-4 text-white" style="background-color:grey;">
+                    <option value="isu_serial">發料單編號</option>
+                    <option value="serial_no">繳庫單編號</option>
+                    <option value="part_no">件號</option>
+                    <option value="part_name">件名</option>
+                    <option value="lot_no">生管批號</option>
+                </select>
+                <input id="search1" type="text" class="form-control col-md-8" placeholder="請輸入搜尋資料...">
+            </div>
+            <div class="form-group row">
+                <select id="column2" class="form-control col-md-4 text-white" style="background-color:grey;">
+                    <option value="serial_no">繳庫單編號</option>
+                    <option value="isu_serial">發料單編號</option>
+                    <option value="part_no">件號</option>
+                    <option value="part_name">件名</option>
+                    <option value="lot_no">生管批號</option>
+                </select>
+                <input id="search2" type="text" class="form-control col-md-8" placeholder="請輸入搜尋資料...">
+            </div>
+            <div class="form-group row">
+                <label class="col-form-label">表單狀態:</label>
+                <select id="select_status" class="form-control col-md-3 p-1 ml-1">
+                    <option value="0">未處理</option>
+                    <option value="1">已完成</option>
+                    <option value="2">已取消</option>
+                    <option selected="selected" value="">全部</option>
+                </select>
+            </div>
+            <div class="form-group row">
+                <label class="col-form-label">匯出模式:</label>
+                <select id="export-mode" class="form-control col-md-4 p-1 ml-1">
+                    <option value="">Export Basic</option>
+                    <option value="selected">Export Selected</option>
+                </select>
+            </div>
+            <div class="form-group row">
+                <label class="col-form-label mr-1">繳庫日期:</label>
+                <input type="date" id="s_date" class="form-control col-md-4" style="padding:0.5px;" value="{{ now | date('Y-m-d') }}">
+                <label class="col-form-label">&nbsp;~&nbsp;</label>
+                <input type="date" id="e_date" class="form-control col-md-4" style="padding:0.5px;" value="{{ now | date('Y-m-d') }}">
+            </div>
+            <div class="formgroup row">
+                <label class="col-form-label mr-1">排序欄位:</label>
+                <select id="sortName" class="form-control col-md-4">
+                    <option value="serial_no">繳庫單編號</option>
+                    <option value="inh_date">繳庫日期</option>
+                    <option value="e_date">最後列印日</option>
+                    <option value="part_no">件號</option>
+                </select>
+                <select id="sortOrder" class="form-control col-md-3">
+                    <option value="desc">降冪</option>
+                    <option value="asc">升冪</option>
+                </select>
+            </div>
+            <div class="row  pt-3">
+                <div id="search-but" class="btn btn-primary col-md-4 offset-md-4">
+                    搜尋
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="container">
+        <table id="mytab" class="table"></table>
+    </div>
+</div>
+
+{{ csrf.field | raw }}
+
+<script>
+    window.operateEvents = {
+        'click .remove': function (e, values, row, index) {
+            var msg = '確定要刪除嗎?\n\n編號:  ' + row.serial_no + 
+            '\n線名:  ' + row.line_name +
+            '\n件號:  ' + row.part_no;
+            if (confirm(msg)) {
+                $.ajax({
+                    type: "POST",
+                    url: '{{ path_for("inh.delete") }}',
+                    dataType: "json",
+                    data: {
+                        serial_no: row.serial_no,
+                        csrf_name: document.getElementById('csrf_name').value,
+                        csrf_value: document.getElementById('csrf_value').value
+                    },
+                    success: function(data) {
+                        if(data.msg != 'ok') {}
+                        else
+                            $("#ajax_info").html('<font color="#007500">' + data.msg + '</font>');
+                    },
+                    error: function(jqXHR) {
+                        alert('發生錯誤：' + jqXHR.status);
+                    }
+                });
+                InitTable();
+            }
+            /*
+            $('#mytab').bootstrapTable('remove', {
+                field: 'serial_no',
+                values: [row.serial_no]
+            });
+            */
+        },
+        'click .recover': function (e, values, row, index) {
+            var msg = '確定要復原嗎?\n\n編號:  ' + row.serial_no + 
+            '\n線名:  ' + row.line_name +
+            '\n件號:  ' + row.part_no;
+            if(confirm(msg)) {
+                $.ajax({
+                    type: "POST",
+                    url: '{{ path_for("inh.recover") }}',
+                    dataType: "json",
+                    data: {
+                        serial_no: row.serial_no,
+                        csrf_name: document.getElementById('csrf_name').value,
+                        csrf_value: document.getElementById('csrf_value').value
+                    },
+                    success: function(data) {
+                        if(data.msg != 'ok'){}
+                        else
+                            $("#ajax_info").html('<font color="#007500">' + data.msg + '</font>');
+                    },
+                    error: function(jqXHR) {
+                        alert('發生錯誤：' + jqXHR.status);
+                    }
+                });
+                InitTable();
+            }
+        }
+    }
+    function InitTable () {
+
+        //先銷毀再加載
+        $('#mytab').bootstrapTable("destroy").bootstrapTable({
+            sidePagination: 'server',  /* server模式,只讀取目前頁面顯示的資料 */
+            //contentType:"application/x-www-form-urlencoded; charset=UTF-8", /* 使用post必須加這行 */
+            method: 'get',
+            url: '{{ path_for("inh.bstb.json") }}',  /* 取資料的url,預設資料格式為json,如果為server模式,必須回傳rows和total參數 */
+            classes: 'table-striped',
+            //height: 1000,
+            pagination: true, /* 開啟分頁模式 */
+            pageList: [5, 10, 20, 50], /* 每頁可顯示的筆數 */
+            pageNumber: 1, /* 預設載入時於第幾頁 */
+            pageSize: 5, /* 預設載入時顯示筆數 */
+            showRefresh: true, /* 顯示重新整理的圖示 */
+            sortName: document.getElementById('sortName').value, /* 傳到url變數'sort'的資料 */
+            sortOrder: document.getElementById('sortOrder').value, /* 傳到url變數'order'的資料 */
+            search: false, /* 預設搜尋功能,會傳送變數'search'至url */
+            showColumns: true,
+            showToggle: true, /* 切換模式 : 一筆資料顯示一欄一列 */
+            //showPaginationSwitch: true, /* 資料顯示隱藏功能 */
+            detailView: false, /* 開啟顯示詳細資料功能 */
+            detailViewByClick: false, /* 點選列顯示詳細資料 */
+            detailViewIcon: false, /* 取消詳細資料第一欄圖示 */
+            detailFormatter: detailFormatter, /* 詳細資料顯示函式 */
+            rowAttributes: function (row, index) {	/* 資料屬性 */
+                                return row;
+                            },
+            //toolbar: '#toolbar', /* 工具列 */
+            iconSize: 'lg', /* 工具列Icon大小 */
+            maintainMetaData: true,
+            theadClasses: 'thead-dark', /* 表格標題樣式 */
+            //showFullscreen: true,
+            /* 傳到url的參數 */
+            queryParams: function (params) {
+                var query_params = {
+                    limit: params.limit,
+                    offset: params.offset,
+                    sort: params.sort,
+                    order: params.order,
+                    date1: $('#s_date').val(),
+                    date2: $('#e_date').val(),
+                    key1: $('#column1').val(),
+                    condition1: $('#search1').val(),
+                    key2: $('#column2').val(),
+                    condition2: $('#search2').val(),
+                    select_status: $('#select_status').val()
+                };
+                return query_params;
+            },
+            columns: [ /* 欄位 => field:讀取資料索引 title:顯示名稱 */
+                { title: '選取', checkbox: true, visible: $('#export-mode').val()==='selected', printIgnore: true },
+                { field: 'operate',
+                    title: '功能',
+                    align: 'center',
+                    clickToSelect: false,
+                    events: window.operateEvents,
+                    printIgnore: true
+                },
+                { field: 'status', title: '狀態'},
+                { field: 'isu_serial', title: '發料單編號' },
+                { field: 'serial_no', title: '繳庫單編號' },
+                { field: 'part_no', title: '件號' },
+                { field: 'part_name', title: '件名' },
+                { field: 'line_name', title: '線名' },
+                { field: 'lot_no', title: '生管批號' },
+                { field: 'plan_qty', title: '計畫數' },
+                { field: 'isu_qty', title: '發料數' },
+                { field: 'no_inh_qty', title: '尚未繳庫數' },
+                { field: 'man_lot1', title: '製造批號_1' },
+                { field: 'inh_qty1', title: '繳庫數_1' },
+                { field: 'man_lot2', title: '製造批號_2' },
+                { field: 'inh_qty2', title: '繳庫數_2' },
+                { field: 'man_lot3', title: '製造批號_3' },
+                { field: 'inh_qty3', title: '繳庫數_3' },
+                { field: 'inh_dep', title: '繳庫單位代號' },
+                { field: 'plan_date', title: '計劃日' },
+                { field: 's_date', title: '繳庫單產生日期' },
+                { field: 'e_date', title: '最後列印日期' }
+                ]
+            });
+    };
+
+    function detailFormatter(index, row) { 
+        var html = []; 
+        $.each(row, function (key, value) { 
+            html.push('<p><b>' + key + ':</b> ' + value + '</p>'); 
+        }); 
+        return html.join(''); 
+    } 
+    
+    function valid() {
+        var date1 = document.getElementById('s_date');
+        var date2 = document.getElementById('e_date');
+        clearError(date1);
+        clearError(date2);
+
+        var result = true;
+
+        if( date1.value.trim().length != 0 && !isExistDate(date1.value, "yyyy-MM-dd") ) {
+            setError(date1, "格式錯誤");
+            result = false;
+        }
+        if( date2.value.trim().length != 0 && !isExistDate(date2.value, "yyyy-MM-dd") ) {
+            setError(date2, "格式錯誤");
+            result = false;
+        }
+        return result;
+    }
+    
+    /* 和javascript window.onload 差別 onload 在所有元件加載完才執行 */
+    /* JQuery語法 : 等於$(document).ready(function(){}); 在 DOM結構加載完成後執行，不包含圖片,非文字媒體.. */
+    window.onload = function(){
+        InitTable ();
+        
+        $("#search-but").click(function () {
+            if(!valid()) return;
+            InitTable ();
+            
+        });
+        
+        $("#export-mode").change(function () {
+            InitTable();
+        });
+        
+        // BootstrapTable onDbClickRow
+        $('#mytab').on('dbl-click-row.bs.table', function (e, row, $element) {
+            var person = prompt("繳庫單編號:  "+row.serial_no+"\n件號:  "+row.part_no+"\n\n請輸入列印方式:\n一聯一張: 1\n兩聯一張: 2", "1");
+            var print_t = 'one_by_one';
+            if (person != null) {
+                if(person == '2') {
+                    print_t = 'two_by_one';
+                } 
+
+                var url = "<?php echo BASE_URI; ?>/controller/InhController.php?";
+                var param = [
+                    'function=rePrint',
+                    ('serial_no=' + row.serial_no),
+                    ('man_lot1=' + row.man_lot1),
+                    ('inh_qty1=' + row.inh_qty1),
+                    ('man_lot2=' + row.man_lot2),
+                    ('inh_qty2=' + row.inh_qty2),
+                    ('man_lot3=' + row.man_lot3),
+                    ('inh_qty3=' + row.inh_qty3),
+                    ('lot_no=' + row.lot_no),
+                    ('part_no=' + row.part_no),
+                    ('part_name=' + row.part_name),
+                    ('unit=' + row.unit),
+                    ('print_t=' + print_t)
+                ].join('&');
+
+                window.open(url+param, "_blank");
+
+            }
+        });
+    };
+    
+</script>
+
+{% endblock %}

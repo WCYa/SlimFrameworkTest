@@ -1,0 +1,229 @@
+{% extends 'layouts/app.twig' %}
+
+{% block content %}
+
+    <h2 class="font-weight-bold">繳庫單查詢</h2>
+    <hr />
+
+    <div style="text-align: center;">
+        <div class="noprint" style="display:inline-block; width:430px;">
+            <form id="inh_form" style="text-align: left;" method="GET" >
+                <div style="background-color: lightBlue; padding:10px;">
+                    <label>期間:&nbsp;&nbsp;</label>
+                        <input type="text" id="date1" name="date1" value="{% if old.date1 %}{{ old.date1 }}{% else %}{{ date }}{% endif %}" maxlength="8" size="8" />
+                        &nbsp;&nbsp;~&nbsp;&nbsp;
+                        <input type="text" id="date2" name="date2" value="{% if old.date2 %}{{ old.date2 }}{% else %}{{ date }}{% endif %}" maxlength="8" size="8" />
+                        &nbsp;&nbsp;例:&nbsp;20200101 <br/>
+                    <label>組別:</label><br/>&nbsp;&nbsp;&nbsp;&nbsp;
+                        <input id="all" type="radio" name="group" value="all" {% if old.group == 'all' %}{{ 'checked' }}{% elseif old.group is not defined %}{{ 'checked' }}{% endif %}/><label for="all">全選</label>
+                        <input id="358" type="radio" name="group" value="358" {% if old.group == '358' %}{{ 'checked' }}{% endif %}/><label for="358">煞裝</label>
+                        <input id="360" type="radio" name="group" value="360" {% if old.group == '360' %}{{ 'checked' }}{% endif %}/><label for="360">碟裝</label> 
+                        <br/>
+                    <label>排序1:</label>
+                        <select name="order1">
+                            <option value="serial_no" {% if (old.order1 == 'serial_no') %}{{ 'selected' }}{% endif %}>繳庫單號</option>
+                            <option value="part_no" {% if old.order1 == 'part_no' %}{{ 'selected' }}{% endif %}>件號</option>
+                            <option value="inh_dep" {% if old.order1 == 'inh_dep' %}{{ 'selected' }}{% endif %}>組別</option>
+                        </select>
+                        <label>升降冪:</label>
+                        <select name="power1">
+                            <option value="ASC" {% if old.power1 == 'ASC' %}{{ 'selected' }}{% endif %}>升冪</option>
+                            <option value="DESC" {% if old.power1 == 'DESC' %}{{ 'selected' }}{% endif %}>降冪</option>
+                        </select>
+                        <br/>
+                    <label>排序2:</label>
+                        <select name="order2">
+                            <option value=""></option>
+                            <option value="serial_no" {% if old.order2 == 'serial_no' %}{{ 'selected' }}{% endif %}>繳庫單號</option>
+                            <option value="part_no" {% if old.order2 == 'part_no' %}{{ 'selected' }}{% endif %}>件號</option>
+                            <option value="inh_dep" {% if old.order2 == 'inh_dep' %}{{ 'selected' }}{% endif %}>組別</option>
+                        </select>
+                        <label>升降冪:</label>
+                        <select name="power2">
+                            <option value="ASC" {% if old.power2 == 'ASC' %}{{ 'selected' }}{% endif %}>升冪</option>
+                            <option value="DESC" {% if old.power2 == 'DESC' %}{{ 'selected' }}{% endif %}>降冪</option>
+                        </select>
+                        <br/>
+                    <label>條件1:</label>
+                        <select name="key1">
+                            <option value="serial_no" {% if old.key1 == 'serial_no' %}{{ 'selected' }}{% endif %}>繳庫單號</option>
+                            <option value="isu_serial" {% if old.key1 == 'isu_serial' %}{{ 'selected' }}{% endif %}>發料單號</option>
+                            <option value="part_no" {% if old.key1 == 'part_no' %}{{ 'selected' }}{% endif %}>件號</option>
+                            <option value="lot_no" {% if old.key1 == 'lot_no' %}{{ 'selected' }}{% endif %}>生管批號</option>
+                        </select>
+                        <input type="text" name="condition1" style="text-transform: uppercase;" value="{{ old.condition1 }}">
+                        <span class="help-block text-danger">{{ error.condition1 }}</span>
+                        <br/>
+                    <label>條件2:</label>
+                        <select name="key2">
+                            <option value="serial_no" {% if old.key2 == 'serial_no' %}{{ 'selected' }}{% endif %}>繳庫單號</option>
+                            <option value="isu_serial" {% if old.key2 == 'isu_serial' %}{{ 'selected' }}{% endif %}>發料單號</option>
+                            <option value="part_no" {% if old.key2 == 'part_no' %}{{ 'selected' }}{% endif %}>件號</option>
+                            <option value="lot_no" {% if old.key2 == 'lot_no' %}{{ 'selected' }}{% endif %}>生管批號</option>
+                        </select>
+                        <input type="text" name="condition2" style="text-transform: uppercase;" value="{{ old.condition2 }}">
+                        <span class="help-block text-danger">{{ error.condition2 }}</span>
+                        <br/>
+                    <button style="background-color:gray; color:white; font-size:1.3rem; padding: 2px 5px; border-radius:5px;" 
+                    type="submit" onclick="return search('search');">查詢</button>
+                    <input name="offset" id="offset" value="{{ offset }}" hidden />
+                    {% if offset != 0 %}
+                    <button style="background-color:gray; color:white; font-size:1.3rem; padding: 2px 5px; border-radius:5px;" 
+                    type="submit" onclick="return search('up');">上一頁</button>
+                    {% endif %}
+                    {% if count > ( offset + 100 ) %}
+                    <button style="background-color:gray; color:white; font-size:1.3rem; padding: 2px 5px; border-radius:5px;" 
+                    type="submit" onclick="return search('down');">下一頁</button>
+                    {% endif %}
+                </div>
+                <div class="download-page">
+                    &nbsp;&nbsp;下載:&nbsp;&nbsp;<br />
+                    <button type="submit" onclick="return download('small_pdf')">PDF</button>
+                    <button type="submit" onclick="return download('pdf')">完整 PDF </button>
+                    <button type="submit" onclick="return download('txt')"> TXT </button>
+                    <button type="submit" onclick="return download('csv')"> CSV </button>
+                    <button type="submit" onclick="return download('excel')"> EXCEL </button>
+                    <button type="submit" onclick="return download('xls')"> XLS </button>
+                </div>
+            </form>
+            
+        </div>
+        <p>總筆數 : {{ count }} 筆 ，從 {{ offset }} 開始，顯示 100 筆資料 </p>
+        
+        {% if results %}
+            {% set PAGE_ROWS = 10 %}
+            {% for result in results %}
+                {% if loop.index % 10 == 1 %}
+                    <table style="margin: 0px 20px; border: 1px solid black;">
+                    <tr style="font-size: 16px; background-color:#b0c4de; border: 1px solid black;">
+                        <th >序</th>
+                        <th>發料單號</th>
+                        <th>繳庫單號</th>
+                        <th>件號</th>
+                        <th>件名</th>
+                        <th>單位</th>
+                        <th>線名</th>
+                        <th>計劃日</th>
+                        <th>生管批號</th>
+                        <th>使用者</th>
+                        <th>需求數</th>
+                        <th>製號1</th>
+                        <th>數量1</th>
+                        <th>製號2</th>
+                        <th>數量2</th>
+                        <th>製號3</th>
+                        <th>數量3</th>
+                        <th>首次列印日</th>
+                        <th>最後列印日</th>
+                        <th>狀態</th>
+                    </tr>
+                {% endif %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ result.isu_serial }}</td>
+                    <td>{{ result.serial_no }}</td>
+                    <td>{{ result.part_no }}</td>
+                    <td>{{ result.part_name }}</td>
+                    <td>{{ result.inh_dep }}</td>
+                    <td>{{ result.line_name }}</td>
+                    <td>{{ result.plan_date }}</td>
+                    <td>{{ result.lot_no }}</td>
+                    <td>{{ result.user_no }}</td>
+                    <td>{{ result.isu_qty | number_format }}</td>
+                    <td>{{ result.man_lot1 }}</td>
+                    <td>{{ result.inh_qty1 | number_format }}</td>
+                    <td>{{ result.man_lot2 }}</td>
+                    <td>{{ result.inh_qty2 | number_format }}</td>
+                    <td>{{ result.man_lot3 }}</td>
+                    <td>{{ result.inh_qty3 | number_format }}</td>
+                    <td>{{ result.s_date | date('Y-m-d H:i:s') }}</td>
+                    <td>{{ result.e_date | date('Y-m-d H:i:s') }}</td>
+                    {% if result.handle_fg == '2' %}
+                        <td style='color:red'>{{ '已刪除' }}</td>
+                    {% elseif result.handle_fg == '1' %}
+                        <td style='color:blue'>{{ '完成' }}</td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
+                </tr>
+                {% if loop.index % 10 == 0 %}
+                    </table><br />
+                {% endif %}
+            {% endfor %}
+            
+        {% endif %}
+
+    </div>
+    <script>
+
+    function valid()
+    {
+        var date1 = document.getElementById('date1');
+        var date2 = document.getElementById('date2');
+        clearError(date1);
+        clearError(date2);
+
+        var result = true;
+
+        if( date1.value.trim().length != 0 && !isExistDate(date1.value, "yyyyMMdd") ) {
+            setError(date1, "格式錯誤");
+            result = false;
+        }
+        if( date2.value.trim().length != 0 && !isExistDate(date2.value, "yyyyMMdd") ) {
+            setError(date2, "格式錯誤");
+            result = false;
+        }
+        return result;
+    }
+    
+    function search(action)
+    {
+        elem = document.getElementById('offset');
+        value = elem.value;
+        document.getElementById('inh_form').action = "{{ path_for('inh.show') }}";
+        if (action == 'up')
+            elem.value = value - 100;
+        if (action == 'down')
+            elem.value = value + 100;
+        document.getElementById('inh_form').target = '_self';
+        return valid();
+    }
+    
+    function download(fun)
+    {
+        if (!valid())
+            return false;
+        var elem = document.getElementById('inh_form');
+        switch(fun) {
+            case 'small_pdf':
+                elem.target = '_blank';
+                elem.action = '{{ path_for("inh.details-pdf", { "type": "small_pdf" }) }}';
+                break;
+            case 'pdf':
+                elem.target = '_blank';
+                elem.action = '{{ path_for("inh.details-pdf", { "type": "pdf" }) }}';
+
+                break;
+            case 'excel':
+                elem.target = '_blank';
+                elem.action = '{{ path_for("inh.details-xlsx") }}';
+                break;
+            case 'xls':
+                elem.target = '_blank';
+                elem.action = '{{ path_for("inh.details-xls") }}';
+                break;
+            case 'txt':
+                elem.target = '_self';
+                elem.action = '{{ path_for("inh.details", { "type": "txt" }) }}';
+                break;
+            case 'csv':
+                elem.target = '_self';
+                elem.action = '{{ path_for("inh.details", { "type": "csv" }) }}';
+                break;
+        }
+        return true;
+    }
+    
+    </script>
+
+{% endblock %}

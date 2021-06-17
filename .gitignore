@@ -1,0 +1,6 @@
+/.vscode
+/php-cli
+/public/packages
+/public/images
+/vendor
+/app/Controllers/TCPDF

@@ -1,0 +1,37 @@
+{% extends 'layouts/clean.twig' %}
+
+{% block content %}
+
+    <div class="d-flex justify-content-center" >
+        <div class="p-4 col-md-5 rounded "
+         style="box-shadow: 2px 2px 5px grey;">
+            <h2>
+                <a href="{{ path_for('home') }}"><img src="{{ base_url() }}/images/hta_logo.gif" width="40" height="45" class="d-inline-block align-top mr-2" alt=""></a>
+                登入
+            </h2>
+            <p>請輸入你的登入資訊.</p><hr />
+            <form action="{{ path_for('login') }}" method="post">
+                <!-- 如有錯誤訊息，設置樣式 -->
+                <div class="form-group">
+                    <label>帳號</label>
+                    <input id="account" type="text" name="account" class="form-control {% if error.account %}{{ 'is-invalid' }}{% endif %}" value="{{ old.account }}">
+                    <span class="help-block {% if error.account %}{{ 'text-danger' }}{% endif %}">{{ error.account }}</span>
+                </div>    
+                <div class="form-group">
+                    <label>密碼</label>
+                    <input type="password" name="password" class="form-control {% if error.password %}{{ 'is-invalid' }}{% endif %}">
+                    <span class="help-block {% if error.password %}{{ 'text-danger' }}{% endif %}">{{ error.password }}</span>
+                </div>
+                <div class="form-group">
+                    <input type="submit" class="btn btn-primary" value="登入">
+                </div>
+                {{ csrf.field | raw}}
+            </form>
+        </div>
+    </div>
+
+    <script defer="defer">
+        document.getElementById("account").focus();
+    </script>
+    
+{% endblock %}

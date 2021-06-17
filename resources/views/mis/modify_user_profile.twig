@@ -1,0 +1,162 @@
+{% extends 'layouts/app.twig' %}
+
+{% block content %}
+
+    <h2 class="font-weight-bold">修改使用者資料</h2>
+    <hr /><br />
+
+    <form class="col-md-6" >
+        <div class="form-group row">
+            <label class="col-form-label col-md-3">帳號查詢:</label>
+            <input class="form-control col-md-4" list="accountList" name="sAccount" id="sAccount" value="{{ old.account }}" required />
+                <dataList id="accountList">
+                    {% for user in users %}
+                    <option value="{{ user.account }}">{{ user.account }}</option>
+                    {% endfor %}
+                </dataList>
+            <button class="btn btn-primary ml-1" onclick="search_user();return false;">查詢</button>
+            <span class="help-block {% if error.account %}{{ 'text-danger' }}{% endif %}">{{ error.account }}</span>
+        </div>
+    </form>
+    <hr /><br />
+
+    <form id="profileForm" class="col-md-6" method="post" action="{{ path_for('modify-user-profile') }}">
+        <div class="form-group row">
+            <label class="col-form-label col-md-3">帳號</label>
+            <input type="text" class="form-control col-md-4" id="account" value="{{ old.account }}" disabled/>
+            <input type="text" id="account2" name="account" value="{{ old.account }}" hidden/>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-md-3">使用者姓名</label>
+            <input type="text" class="form-control col-md-4" id="username" name="username" value="{{ old.username }}"/>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-md-3">信箱</label>
+                <input type="text" class="form-control col-md-4" id="email" name="email" value="{{ old.email }}"/>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-md-3">部門</label>
+            <select class="custom-select form-control  col-md-4" name="group_code" id="group_code">
+                <option value=""></option>
+                {% for group in groups %}
+                    <option value="{{ group.code }}" {% if group.code == old.group_code %}selected{% endif %}>{{ group.code }} {{ group.group_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-md-3">角色</label>
+                <input type="text" class="form-control col-md-4" id="role" name="role" value="{{ old.role }}"/>
+        </div>
+        <br />
+        <div class="form-group">
+            <label>權限</label>
+
+            <div style="margin-bottom:10px; padding:5px; border: 1.5px dashed grey; border-radius:5px; ">
+
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label" for="pr"><b>請購單 : </b></label>
+                    <input class="form-check-input" type="checkbox" id="pr" onClick="toggle(this, 'pr')" hidden/>
+                </div>
+                <div class="form-check form-check-inline pl-3">
+                    <input class="form-check-input pr" type="checkbox" id="prr" name="auth[pr][]" value="prr" 
+                    {% if 'prr' in old.auth['pr'] %}checked{% endif %}/>
+                    <label class="form-check-label" for="prr">讀</label>
+                </div>
+                <div class="form-check form-check-inline pl-3">
+                    <input class="form-check-input pr" type="checkbox" id="prw" name="auth[pr][]" value="prw" 
+                    {% if 'prw' in old.auth['pr'] %}checked{% endif %}/>
+                    <label class="form-check-label" for="prw">寫</label>
+                </div>
+                <div class="form-check form-check-inline pl-3">
+                    <input class="form-check-input pr" type="checkbox" id="prd" name="auth[pr][]" value="prd" 
+                    {% if 'prd' in old.auth['pr'] %}checked{% endif %}/>
+                    <label class="form-check-label" for="prd">刪</label>
+                </div>
+            </div>
+
+            <div style="margin-bottom:10px; padding:5px; border: 1.5px dashed grey; border-radius:5px; ">
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label" for="inh"><b>繳庫作業 : </b></label>
+                    <input class="form-check-input" type="checkbox" id="inh" onClick="toggle(this, 'inh')" hidden/>
+                </div>
+                <div class="form-check form-check-inline pl-3">
+                    <input class="form-check-input inh" type="checkbox" id="inhr" name="auth[inh][]" value="inhr" 
+                    {% if 'inhr' in old.auth['inh'] %}checked{% endif %}/>
+                    <label class="form-check-label" for="inhr">讀</label>
+                </div>
+                <div class="form-check form-check-inline pl-3">
+                    <input class="form-check-input inh" type="checkbox" id="inhw" name="auth[inh][]" value="inhw" 
+                    {% if 'inhw' in old.auth['pr'] %}checked{% endif %}/>
+                    <label class="form-check-label" for="inhw">寫</label>
+                </div>
+                <div class="form-check form-check-inline pl-3">
+                    <input class="form-check-input inh" type="checkbox" id="inhd" name="auth[inh][]" value="inhd" 
+                    {% if 'inhd' in old.auth['pr'] %}checked{% endif %}/>
+                    <label class="form-check-label" for="inhd">刪</label>
+                </div>
+            </div>
+
+
+        </div>
+
+        <div class="form-group float-right">
+            <button type="submit" class="btn btn-outline-primary">確認修改</button>
+            <a href="{{ path_for('home') }}" class="btn btn-secondary">返回</a>
+        </div>
+        {{ csrf.field | raw }}
+    </form>
+
+    <script>
+        // jsonObj 設定 checkbox elements 
+        // json 格式為 = { '頁面名稱' : [ 權限名稱ID, 權限名稱ID, 權限名稱ID, ... ] }
+        function checkbox_set(obj) {
+            if(obj) {
+                for(var array in obj) {
+                    for(var value of obj[array]) {
+                        var check_elem = document.getElementById(value);
+                        if(check_elem)
+                            check_elem.checked = true;
+                    }
+                }
+            }
+        }
+
+        // 取得使用者資料卡資料
+        function search_user()
+        {
+            var oAccountInput = document.getElementById('sAccount');
+
+            $.ajax({
+                url: "{{ path_for('user-profile-json') }}",
+                type: "get",
+                dataType: "json",
+                data: {
+                    'account' : oAccountInput.value
+                },
+                success: function(data){
+                    //console.log(data);
+                    document.getElementById('profileForm').reset();
+                    document.getElementById('account').value = data.account;
+                    document.getElementById('account2').value = data.account;
+                    document.getElementById('username').value = data.username;
+                    document.getElementById('email').value = data.email;
+                    document.getElementById('group_code').value = data.group_code;
+                    document.getElementById('role').value = data.role;
+                    checkbox_set(data.authority);
+                },
+                error: function(xhr){
+                    alert('搜尋失敗，網頁回應代碼: ' + xhr.status);
+                }
+            });
+        }
+
+        // checkbox 群組全選
+        function toggle(obj, class_name) {
+            var elems = document.getElementsByClassName(class_name);
+            for(var i=0; i < elems.length; i++) {
+                elems.item(i).checked = obj.checked;
+            }
+        }
+    </script>
+
+{% endblock %}

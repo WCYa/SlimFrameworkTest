@@ -1,0 +1,422 @@
+{% extends 'layouts/app.twig' %}
+
+{% block content %}
+
+<h2 class="font-weight-bold">繳庫作業</h2>
+<hr />
+
+<div id="toolbar" class="card bg-light" style="">
+    <div class="card-header bg-secondary" style="color:white;">查詢條件</div>
+    <div style="padding: 10px;">
+
+        <div class="card-text p-1">
+            <label style="background-color:grey; color:white; padding:5px;">
+                發料單編號
+            </label>
+            <input id="search1" type="text" class="text-uppercase" style="width:auto;" placeholder="請輸入搜尋資料...">
+            <input id="search1_cahce" hidden />
+        </div>
+        <div class="card-text p-1">
+            <label style="background-color:grey; color:white;  padding:5px;">
+                發料單件號
+            </label>
+            <input id="search2" type="text" class="text-uppercase" style="width:auto;" placeholder="請輸入搜尋資料...">
+            <input id="search2_cahce" hidden />
+            <a id="search-but"  href="#" class="btn btn-primary">
+                搜尋
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <table id="mytab" class="table"></table>
+    <p>臨時資料表:<span id="tmp"></span></p>
+</div>
+
+    <!-- Modal -->
+	<div class="modal fade" id="inputModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title" id="exampleModalCenterTitle">繳庫單填寫</h5>
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			  <span aria-hidden="true">&times;</span>
+			</button>
+		  </div>
+		  <div class="modal-body">
+			<div class="container">
+				<p id="id_serial" style="display:none"></p>
+				<form action="" method="post">
+					<div class="form-group row">
+						<label class="col-sm-3 col-form-label text-italic"><i>件號</i></label>
+						<label id="part_no" class="col-sm-9 col-form-label"></label>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-3 col-form-label text-italic"><i>件名</i></label>
+						<label id="part_name" class="col-sm-9 col-form-label"></label>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-3 col-form-label"><i>發料單編號</i></label>
+						<label id="isu_serial" class="col-sm-9 col-form-label"></label>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-3 col-form-label"><i>生管批號</i></label>
+						<label id="lot_no" class="col-sm-9 col-form-label"></label>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-3 col-form-label"><i>尚未繳庫數</i></label>
+						<label id="no_inh_qty" class="col-sm-9 col-form-label"></label>
+					</div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 ">列印方式</label>
+                        <div class="form-check col-sm-3">
+                            <input type="radio" id="one_by_one" name="print_t" value="one_by_one" class="form-check-input " checked>
+                            <label for="one_by_one" class="form-check-label">一聯一頁</label>
+                        </div>
+                        <div class="form-check col-sm-3">
+                            <input type="radio" id="two_by_one" name="print_t" value="two_by_one" class="form-check-input ">
+                            <label for="two_by_one" class="form-check-label">兩聯一頁</label>
+                        </div>
+                    </div>
+					<div class="form-group row">
+						<label class="col-sm-1 col-form-label"></label>
+						<label class="col-sm-5 col-form-label bg-primary text-white text-center" style="margin-right:5px;">製造批號:</label>
+						<label class="col-sm-5 col-form-label bg-primary text-white text-center">數量:</label>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-1 col-form-label">1.</label>
+						<input id="man_lot1" class="col-sm-5 form-control" style="margin-right:5px;"></input>
+						<input id="inh_qty1" class="col-sm-5 form-control"></input>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-1 col-form-label">2.</label>
+						<input id="man_lot2" class="col-sm-5 form-control" style="margin-right:5px;"></input>
+						<input id="inh_qty2" class="col-sm-5 form-control"></input>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-1 col-form-label">3.</label>
+						<input id="man_lot3" class="col-sm-5 form-control" style="margin-right:5px;"></input>
+						<input id="inh_qty3" class="col-sm-5 form-control"></input>
+					</div>
+				</form>
+			</div>
+		  </div>
+		  <div class="modal-footer">
+			<button id="inputInh" type="button" class="btn btn-primary" >完成</button>
+			<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+
+{{ csrf.field | raw }}
+
+<script>
+
+var can_qty = 0;
+var no_inh_qty = 0;
+var tmp = '';
+
+// BootstrapTable OperateFormatter
+function operateFormatter (values, row, index) {
+    return [
+        '<a class="inputBt btn btn-primary" href="javascript:void(0)" title="Input">',
+        '輸入',
+        '</a>'
+    ].join('')
+}
+
+var inputButton = function(row) {
+    // 初始化Modal資料 並顯示Modal
+    $('#id_serial').html(row.id_serial);
+    $('#part_no').html(row.part_no);
+    $('#part_name').html(row.part_name);
+    $('#isu_serial').html(row.isu_serial);
+    $('#lot_no').html(row.lot_no);
+    var inh_str = parseInt(row.no_inh_qty);
+    can_qty = row.no_inh_qty-row.inhed_qty;
+    no_inh_qty = row.no_inh_qty;
+    if(row.inhed_qty>0) {
+        inh_str += '<p class="text-primary"><font id="inhed_qty" style="margin-left:5px;" color="#ff0000">已列印:'+row.inhed_qty+'</font>';
+        inh_str += '&nbsp;&nbsp;尚可列印數:'+can_qty+'</p>';
+    }
+    $('#no_inh_qty').html(inh_str);
+    $('#inputModal').modal('show');
+}
+
+// BootStrapTable Events to Open Modal
+window.operateEvents = {
+    'click .inputBt': function (e, values, row, index) {
+        inputButton(row);
+    }
+}
+
+// BootStrapTable
+function InitTable () {
+    //先銷毀再加載
+    $('#mytab').bootstrapTable("destroy").bootstrapTable({
+        sidePagination: 'server',  /* server模式,只讀取目前頁面顯示的資料 */
+        url: '{{ path_for("inh.work.json") }}',  /* 取資料的url,預設資料格式為json,如果為server模式,必須回傳rows和total參數 */
+        //contentType:"application/x-www-form-urlencoded; charset=UTF-8", /* 使用post必須加這行 */
+        method: 'get',
+        classes: 'table-striped',
+        height: 800,
+        pagination: true,           /* 開啟分頁模式 */
+        pageList: [5, 10, 20, 50],  /* 每頁可顯示的筆數 */
+        pageNumber: 1,              /* 預設載入時於第幾頁 */
+        pageSize:10,                /* 預設載入時顯示筆數 */
+        showRefresh: true,          /* 顯示重新整理的圖示 */
+        sortName: '',               /* 傳到url變數'sort'的資料 */
+        sortOrder: '',              /* 傳到url變數'order'的資料 */
+        search: false,              /* 預設搜尋功能,會傳送變數'search'至url */
+        showColumns: true,
+        showToggle: true,           /* 切換模式 : 一筆資料顯示一欄一列 */
+        //showPaginationSwitch: true, /* 資料顯示隱藏功能 */
+        detailView: false,          /* 開啟顯示詳細資料功能 */
+        detailViewByClick: false,   /* 點選列顯示詳細資料 */
+        detailViewIcon: false,      /* 取消詳細資料第一欄圖示 */
+        //detailFormatter: detailFormatter, /* 詳細資料顯示函式 */
+        theadClasses: 'thead-dark', /* 表格標題樣式 */
+        rowAttributes: function (row, index) {	/* 資料屬性 */
+                            return row;
+                        },
+        toolbar: '#toolbar',        /* 工具列 */
+        iconSize: 'lg',             /* 工具列Icon大小 */
+        maintainMetaData: true,
+        clickToSelect: true,        // 能夠點選row就選取checkbox或radiobox 
+        showFullscreen: true,
+        //showPrint: true,
+        // 傳到url的參數 
+        queryParams: function (params) {
+            var query_params = {
+                function: 'bsTable',
+                limit: params.limit,
+                offset: params.offset,
+                sort: params.sort,
+                order: params.order,
+                search1: $('#search1').val(),
+                search1_cahce: $('#search1_cahce').val(),
+                search2: $('#search2').val(),
+                search2_cahce: $('#search2_cahce').val(),
+                tmp: tmp
+            };
+            $('#search1_cahce').val($('#search1').val());
+            $('#search2_cahce').val($('#search2').val());
+            return query_params;
+        },
+        columns: [ // 欄位 => field:讀取資料索引 title:顯示名稱 
+            { title: '選取', checkbox: true, visible: $('#export-mode').val()==='selected', printIgnore: true },
+            { title: '繳庫按鈕',
+                align: 'center',
+                clickToSelect: false,
+                formatter: operateFormatter,
+                events: window.operateEvents
+                },
+            //{ field: 'rec_id', title: '資料序號'},
+            { field: 'isu_serial', title: '發料單編號' },
+            { field: 'line_name', title: '線名' },
+            { field: 'lot_no', title: '生管批號' },
+            { field: 'part_no', title: '件號' },
+            { field: 'part_name', title: '件名' },
+            { field: 'plan_date', title: '計劃日' },
+            { field: 'plan_qty', title: '計畫數' },
+            { field: 'isu_qty', title: '發料數' },
+            { field: 'no_inh_qty', title: '尚未繳庫數' },
+            { field: 'man_lot1', title: '製造批號_1' },
+            { field: 'inh_qty1', title: '繳庫數_1' },
+            { field: 'man_lot2', title: '製造批號_2' },
+            { field: 'inh_qty2', title: '繳庫數_2' },
+            { field: 'man_lot3', title: '製造批號_3' },
+            { field: 'inh_qty3', title: '繳庫數_3' },
+            { field: 'unit', title: '單位' },
+            { field: 'inh_dep', title: '繳庫單位代號' },
+            { field: 'user_no', title: '使用者' },
+            { field: 'id_serial', title: '系統識別代號' }
+            ]
+    });
+};
+
+window.onload = function() {
+    
+    // ajax取得臨時表
+    $.ajax({
+        type: "POST",
+        url: "{{ path_for('inh.get-temp') }}",
+        dataType: "json",
+        data: {
+            csrf_name: document.getElementById('csrf_name').value,
+            csrf_value: document.getElementById('csrf_value').value
+        },
+        success: function(data) {
+            tmp = data.tmp;
+            $('#tmp').html(tmp);
+        },
+        error: function(jqXHR) {
+            alert('發生錯誤：，狀態' + jqXHR.status);
+            //window.history.back();
+        }
+    });
+    
+    // 初始化 BoostrapTable
+    InitTable();
+
+    // BootStrapTable ToolBar 搜尋鈕事件
+    $("#search-but").click(function () {
+        //$('#mytab').bootstrapTable(('refresh'));
+        InitTable();
+    });
+    
+    // 繳庫完成 按鈕
+    $('#inputInh').click(function () {				
+        var man_lot1 = $('#man_lot1').val().trim();
+        var inh_qty1 = Number($('#inh_qty1').val());
+        var man_lot2 = $('#man_lot2').val().trim();
+        var inh_qty2 = Number($('#inh_qty2').val());
+        var man_lot3 = $('#man_lot3').val().trim();
+        var inh_qty3 = Number($('#inh_qty3').val());
+        var inhqty_sum = inh_qty1 + inh_qty2 + inh_qty3;
+        
+        if( inh_qty1>0 != man_lot1.length>0 ) {
+            alert("繳庫失敗，製造批號1 與 數量1 錯誤");
+            return
+        }
+        if( inh_qty2>0 != man_lot2.length>0 ) {
+            alert("繳庫失敗，製造批號2 與 數量2 錯誤");
+            return
+        }
+        if( inh_qty3>0 != man_lot3.length>0 ) {
+            alert("繳庫失敗，製造批號3 與 數量3 錯誤");
+            return
+        }
+        if( inhqty_sum <=0 ) {
+            alert("繳庫失敗，繳庫數低於0");
+            return
+        }
+        if( inhqty_sum > can_qty ) {
+            alert("繳庫失敗，繳庫數 大於 可繳庫數");
+            return
+        }
+        
+        var radios = document.getElementsByName("print_t");
+        var print_t = '';
+        for(var i=0; i < radios.length; i++) {
+            if(radios[i].checked) {
+                print_t = radios[i].value;
+            }
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "{{ path_for('inh.input') }}",
+            dataType: "json",
+            data: {
+                id_serial: $('#id_serial').text(),
+                tmp: tmp,
+                man_lot1: man_lot1,
+                inh_qty1: inh_qty1,
+                man_lot2: man_lot2,
+                inh_qty2: inh_qty2,
+                man_lot3: man_lot3,
+                inh_qty3: inh_qty3,
+                no_inh_qty: no_inh_qty,
+                csrf_name: document.getElementById('csrf_name').value,
+                csrf_value: document.getElementById('csrf_value').value
+            },
+            success: function(respond) {                
+                if(respond.msg!="ok") {
+                    alert("繳庫失敗 : " + respond.msg);
+                } else if(respond.msg=="ok"){
+                    alert('繳庫成功\n繳庫單編號為:' + respond.serial_no);
+                    $('#inputModal').modal('hide');
+                    // 輸入成功 清空數據
+                    $('#man_lot1').val("");
+                    $('#inh_qty1').val("");
+                    $('#man_lot2').val("");
+                    $('#inh_qty2').val("");
+                    $('#man_lot3').val("");
+                    $('#inh_qty3').val("");
+                    InitTable ();
+                    
+                    
+                    var url = "{{ path_for('inh.print') }}?";
+                    var param = [
+                        ('serial_no=' + respond.serial_no),
+                        ('man_lot1=' + man_lot1),
+                        ('inh_qty1=' + inh_qty1),
+                        ('man_lot2=' + man_lot2),
+                        ('inh_qty2=' + inh_qty2),
+                        ('man_lot3=' + man_lot3),
+                        ('inh_qty3=' + inh_qty3),
+                        ('lot_no=' + respond.lot_no),
+                        ('part_no=' + respond.part_no),
+                        ('part_name=' + respond.part_name),
+                        ('unit=' + respond.unit),
+                        ('print_t=' + print_t)
+                    ].join('&');
+
+                    window.open(url+param, "_blank");
+
+                }
+            },
+            error: function(jqXHR) {
+                alert('發生錯誤：' + jqXHR.status);
+            }
+        }); // end of ajax
+        
+    }); // end of #inputInh click function
+    
+    // BootstrapTable onDbClickRow
+    $('#mytab').on('dbl-click-row.bs.table', function (e, row, $element) {
+       inputButton(row);
+    });
+    
+} // end of window.onload
+
+// 刪除臨時表 和 紀錄 函式
+
+function delTmp() {
+    $.ajax({
+        type: "POST",
+        url: "{{ path_for('inh.del-temp') }}",
+        dataType: "json",
+        data: {
+            tmp: document.getElementById('tmp').innerHTML,
+            csrf_name: document.getElementById('csrf_name').value,
+            csrf_value: document.getElementById('csrf_value').value
+        },
+        success: function() {},
+        error: function() {}
+    });
+}
+
+// 離開網頁時事件
+
+window.onbeforeunload = function(e) {
+    if (navigator.sendBeacon) {
+        let data = new FormData();
+        data.append('tmp', document.getElementById('tmp').innerHTML);
+        data.append('csrf_name', document.getElementById('csrf_name').value)
+        data.append('csrf_value', document.getElementById('csrf_value').value)
+        // sendBeacon 將少量資料使用 post 異步傳送
+        navigator.sendBeacon("{{ path_for('inh.del-temp') }}", data);
+    } else {
+        ajax({
+        url: "{{ path_for('inh.del-temp') }}",
+        method: 'post',
+        async: false,
+        data: {
+            tmp: document.getElementById('tmp').innerHTML,
+            csrf_name: document.getElementById('csrf_name').value,
+            csrf_value: document.getElementById('csrf_value').value
+        }
+        });
+    }
+    
+    return null;
+}
+
+
+</script>
+
+{% endblock %}

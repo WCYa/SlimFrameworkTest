@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <meta http-equtv="X-UA-Compatible" content="IE=edge">
+        <title>亨通 ERP</title>
+        <link href="{{ base_url() }}/images/hta_logo.gif" rel="shortcut icon">
+        
+        <link href="{{ base_url() }}/packages/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+        
+        <script src="{{ base_url() }}/packages/jquery.min.js"></script>
+        <script src="{{ base_url() }}/packages/bootstrap/js/bootstrap.bundle.js" ></script>
+        
+    </head>
+    <body>
+        <div class="container pt-5">
+        {% include 'layouts/partials/flash.twig' %}
+        {% block content %}{%endblock %}
+        </div>
+    </body>
+</html>

@@ -1,0 +1,51 @@
+{% extends 'layouts/app.twig' %}
+
+{% block content %}
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a  href="{{ path_for('home') }}">首頁</a></li>
+            <li class="breadcrumb-item active" aria-current="page">流程資訊</li>
+        </ol>
+    </nav>
+
+    <h3 class="font-weight-bold">流程資訊{{ data.finished | raw }}</h3>
+    <hr /><br />
+    <div class="col-md-8">
+        <h4>標題 : {{ data.title }}</h4><br /><br />
+        送件人 : {{ data.username }}<br /><br />
+        開始時間 : {{ data.create_at }}<br /><br />
+        備註 : <pre class="bg-white p-2">{{ data.comment }}</pre><br /><br />
+        附件 : {{ data.attachment_path }}<br /><br />
+        {% if data.attachment_path | default %}
+        <a class="btn btn-primary" href="{{ path_for('official.download', {'file_name': data.attachment_path}) }}"><i class="fa fa-download"></i>下載附件</a>
+        {% endif %}
+    </div><br />
+    
+    <h4>流程狀態 : </h4>
+    <div class="row col-md-8">
+        <div class="col-3 rounded-left bg-dark text-white text-center p-2">流程人</div>
+        <div class="col-3 rounded-left bg-dark text-white text-center p-2">評論</div>
+        <div class="col-3 bg-dark text-white text-center p-2">結束時間</div>
+        <div class="col-3 rounded-right bg-dark text-white text-center p-2">簽核狀態</div>
+    </div>
+
+    {% for f in data.flows %}
+    <div class="row col-md-8">
+        <div class="border col-3 rounded-left text-center p-2">{{ f.username }}</div>
+        <div class="border col-3 rounded-left text-center p-2 text-break">{{ f.comment }}</div>
+        {% if f.state == 0 %}
+            <div class="border col-3 text-center p-2"></div>
+            <div class="border col-3 rounded-right text-center p-2 text-secondary">尚未</div>
+        {% elseif f.state == 1 %}
+            <div class="border col-3 text-center p-2">{{ f.end_at }}</div>
+            <div class="border col-3 rounded-right text-center p-2 text-white bg-success">完成</div>
+        {% elseif f.state == 2 %}
+            <div class="border col-3 text-center p-2">{{ f.end_at }}</div>
+            <div class="border col-3 rounded-right text-center p-2 text-white bg-danger">退回</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+ 
+    <br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+{% endblock %}
